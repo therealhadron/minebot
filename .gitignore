@@ -131,3 +131,7 @@ dmypy.json
 .serverless
 vendored
 node_modules
+
+# Minecraft files (assuming the server is started in this folder)
+server/
+server.jar
