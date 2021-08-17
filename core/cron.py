@@ -2,9 +2,10 @@ import time, logging
 from mcstatus import MinecraftServer
 from rcon import save_and_stop
 
-CHECKS_TO_STOP = 3
-STARTUP_WAIT_SECONDS = 2 * 60
-CHECK_INTERVAL_SECONDS = 5
+SECONDS_PER_MINUTE = 60
+CHECKS_TO_STOP = 2
+STARTUP_WAIT_SECONDS = 2 * SECONDS_PER_MINUTE
+CHECK_INTERVAL_SECONDS = 5 * SECONDS_PER_MINUTE
 
 SERVER_HOST = "localhost"
 SERVER_PORT = 25565

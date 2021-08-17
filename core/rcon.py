@@ -2,7 +2,7 @@ from mcrcon import MCRcon
 import time
 
 HOST = "localhost"
-SECRET = "12345"
+SECRET = "69420"
 
 def save_and_stop(wait_time_seconds = None):
     with MCRcon(HOST, SECRET) as mcr:

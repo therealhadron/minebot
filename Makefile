@@ -6,10 +6,10 @@ install:
 
 run: install
 	cd core && python3 cron.py &
-	mkdir -p server && cd server && java -Xmx1024M -Xms1024M -jar ../server.jar nogui
+	scripts/init_server_settings.sh && cd server && java -Xmx1024M -Xms1024M -jar ../server.jar nogui
 
 clean:
 	rm -rf server
-	rm server.jar 2> /dev/null
+	rm -f server.jar
 
 .PHONY: install run clean
