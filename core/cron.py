@@ -38,7 +38,7 @@ def main():
                 num_checks += 1
                 logging.warning(f"Empty server detected, auto-shutdown sequence initiated ({num_checks}/{CHECKS_TO_STOP})")
                 
-            if num_checks > CHECKS_TO_STOP:
+            if num_checks >= CHECKS_TO_STOP:
                 logging.warning("Empty server time exceeded, stopping server...")
                 stop_server()
                 break

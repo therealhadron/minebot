@@ -15,4 +15,4 @@ def save_and_stop(wait_time_seconds = None):
 
 def send_command(command: str):
     with MCRcon(HOST, SECRET) as mcr:
-        mcr.command(command)
+        return mcr.command(command)

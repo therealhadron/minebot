@@ -20,5 +20,8 @@ functions:
     handler: webhook.handler
     events:
       - http:
-          path: /webhook
+          path: webhook
           method: post
+
+plugins:
+  - serverless-offline
