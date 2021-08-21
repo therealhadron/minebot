@@ -129,7 +129,6 @@ dmypy.json
 .pyre/
 
 .serverless
-vendored
 node_modules
 
 # Minecraft files (assuming the server is started in this folder)
