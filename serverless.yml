@@ -1,4 +1,4 @@
-service: my-telegram-bot
+service: minebot
 
 provider:
   name: aws
@@ -7,11 +7,18 @@ provider:
   region: us-east-1
   environment:
     TELEGRAM_TOKEN: ${env:MINEBOT_TOKEN}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - ec2:*
+          Resource: "*"
 
 functions:
   webhook:
     handler: webhook.handler
     events:
       - http:
-          path: webhook
+          path: /webhook
           method: post
