@@ -17,12 +17,12 @@ except:
     logger.error(f"Failed to get telegram token from env, is it set? Error: {traceback.format_exc()}")
     TOKEN = ""
 
-region = 'us-east-1'
-ec2 = boto3.client('ec2', region_name=region)
-ec2_resource = boto3.resource('ec2')
+REGION = 'us-east-1'
+EC2 = boto3.client('EC2', region_name=REGION)
+EC2_RESOURCE = boto3.resource('REGION')
 
-key_Name = 'minebot_server_key'
-security_group_name = 'minebot_security'
+KEY_NAME = 'minebot_server_key'
+SECURITY_GROUP_NAME = 'minebot_security'
 
 TOKEN = os.environ['TELEGRAM_TOKEN']
 BASE_URL = f"https://api.telegram.org/bot{TOKEN}"
@@ -83,7 +83,7 @@ def send_telegram_message(chat_id: str, message: str):
 
 def get_instance_ids():
 
-    all_instances = ec2.describe_instances()
+    all_instances = EC2.describe_instances()
     
     instance_ids = []
     
@@ -98,7 +98,7 @@ def get_instance_ids():
     return instance_ids
 
 def createKeyPair():
-    ec2.create_key_pair(KeyName = key_Name)
+    EC2.create_key_pair(KeyName = KEY_NAME)
 
 # def createKeyPairFile():
 #     file = open(f"{key_Name}.pem", 'w')
@@ -107,12 +107,12 @@ def createKeyPair():
 #     return file
 
 def createSecurityGroup():
-    security_group = ec2.create_security_group(
-        GroupName = security_group_name,
+    security_group = EC2.create_security_group(
+        GroupName = SECURITY_GROUP_NAME,
         Description = 'minebot_security_group',
         VpcId = 'vpc-be6212c3'
     )
-    ec2.authorize_security_group_ingress(
+    EC2.authorize_security_group_ingress(
         GroupId = security_group['GroupId'],
             IpPermissions = [
                 {
@@ -125,12 +125,12 @@ def createSecurityGroup():
     )
 
 def createInstance():
-    instance = ec2_resource.create_instances(
+    instance = EC2_RESOURCE.create_instances(
         ImageId = 'ami-0c2b8ca1dad447f8a',
         MinCount = 1,
         MaxCount = 1,
         InstanceType = 't2.micro',
-        KeyName = key_Name,
+        KeyName = KEY_NAME,
         BlockDeviceMappings = [
             {
                 'DeviceName': "/dev/xvda",
@@ -140,5 +140,5 @@ def createInstance():
                 }
             }
         ],
-        SecurityGroups = [security_group_name]
+        SecurityGroups = [SECURITY_GROUP_NAME]
     )
