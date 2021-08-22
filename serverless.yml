@@ -5,8 +5,9 @@ provider:
   runtime: python3.8
   stage: dev
   region: us-east-1
+  profile: minebot
   environment:
-    TELEGRAM_TOKEN: ${env:MINEBOT_TOKEN}
+    TELEGRAM_TOKEN: ${env:TELEGRAM_TOKEN}
   iam:
     role:
       statements:
@@ -46,3 +47,10 @@ functions:
 
 plugins:
   - serverless-offline
+  - serverless-dotenv-plugin
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    slim: true
+    pythonBin: python3

@@ -5,7 +5,6 @@ logger = logging.getLogger("webhook")
 logging.basicConfig(level=logging.DEBUG)
 import os, sys
 import json
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "./vendored"))
 import requests
 import traceback
 
@@ -18,8 +17,8 @@ except:
     TOKEN = ""
 
 REGION = 'us-east-1'
-EC2 = boto3.client('EC2', region_name=REGION)
-EC2_RESOURCE = boto3.resource('REGION')
+EC2 = boto3.client('ec2', region_name=REGION)
+EC2_RESOURCE = boto3.resource('ec2')
 
 KEY_NAME = 'minebot_server_key'
 SECURITY_GROUP_NAME = 'minebot_security'
