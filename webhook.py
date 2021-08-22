@@ -97,15 +97,13 @@ def get_instance_ids():
     return instance_ids
 
 def createKeyPair():
+    # check to see if key pair already exists
     EC2.create_key_pair(KeyName = KEY_NAME)
 
-# def createKeyPairFile():
-#     file = open(f"{key_Name}.pem", 'w')
-#     file.write(createKeyPair())
-#     file.close
-#     return file
-
 def createSecurityGroup():
+
+    # check to see if security group already exists
+
     security_group = EC2.create_security_group(
         GroupName = SECURITY_GROUP_NAME,
         Description = 'minebot_security_group',
@@ -115,9 +113,24 @@ def createSecurityGroup():
         GroupId = security_group['GroupId'],
             IpPermissions = [
                 {
+                    # for ssh
                     'IpProtocol': 'tcp',
                     'FromPort': 22,
                     'ToPort': 22,
+                    'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
+                },
+                {
+                    # for minecraft server
+                    'IpProtocol': 'tcp',
+                    'FromPort': 25565,
+                    'ToPort': 25565,
+                    'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
+                },
+                {
+                    # for google drive http requests
+                    'IpProtocol': 'tcp',
+                    'FromPort': 80,
+                    'ToPort': 80,
                     'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
                 }
             ]
