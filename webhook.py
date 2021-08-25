@@ -45,6 +45,7 @@ def handler(event, context):
                 if getInstanceInfo("statusCode") == 16:
                     send_telegram_message(chat_id, "Instance already running!")
                 elif getInstanceInfo("statusCode") == 80:
+                    startInstance()
                     send_telegram_message(chat_id, "Starting instance")
                 else:
                     send_telegram_message(chat_id, f"Instance already exists is it is currently: {getInstanceInfo('status')}")
