@@ -209,25 +209,6 @@ def start_instance(instance):
 def stop_instance(instance):
     instance.stop()
 
-# Usage:
-# Minecraft instance must be running first
-# 'status' to get minecraft instance running status (ex. running or stopped) - returns string
-# 'ipAddress' to get minecraft instance's public ip address - returns address as string
-# 'instanceId' to get minecraft's instance id - returns id as string
-def get_instance_info(info, instance):
-    if info == "status":
-        return str(instance.state['Name'])
-    elif info == "statusCode":
-        return instance.state['Code']
-    elif info == "ipAddress":
-        if instance.state['Code'] == InstanceState.running:
-            return str(instance.public_ip_address)
-        else:
-            return "Error. Instance not running"
-    elif info == "instanceId":
-        return str(instance.instance_id)
-    return None
-
 # Finds the minecraft instance and returns it if found
 # Otherwise return none
 def load_instance():
