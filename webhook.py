@@ -7,6 +7,7 @@ import os, sys
 import json
 import requests
 import traceback
+from enum import IntEnum
 
 from core.rcon import send_command
 
@@ -16,9 +17,7 @@ except:
     logger.error(f"Failed to get telegram token from env, is it set? Error: {traceback.format_exc()}")
     TOKEN = ""
 
-REGION = 'us-east-1'
-EC2 = boto3.client('ec2', region_name=REGION)
-EC2_RESOURCE = boto3.resource('ec2')
+ec2 = boto3.resource('ec2')
 
 KEY_NAME = 'minebot_server_key'
 SECURITY_GROUP_NAME = 'minebot_security'
@@ -26,14 +25,24 @@ SECURITY_GROUP_NAME = 'minebot_security'
 TOKEN = os.environ['TELEGRAM_TOKEN']
 BASE_URL = f"https://api.telegram.org/bot{TOKEN}"
 
+class InstanceState(IntEnum):
+    pending = 0
+    running = 16
+    shutting_down = 32
+    terminated = 48
+    stopping = 64
+    stopped = 80
+
 def handler(event, context):
     try:
-        data = json.loads(event["body"])
+        data = event["body"]
         message = str(data["message"]["text"])
         chat_id = data["message"]["chat"]["id"]
 
         logger.info(f"Received message: {message}")
         command_prefix = "/cmd"
+        instance = load_instance()
+
         if message.startswith(command_prefix):
             _send_minecraft_command(chat_id, message[len(command_prefix):])
         elif message.startswith("/start_server"):
@@ -41,57 +50,52 @@ def handler(event, context):
         elif message.startswith("/stop_server"):
             _send_minecraft_command(chat_id, "stop")
         elif message == "startInstance":
-            if instanceExists():
-                if getInstanceInfo("statusCode") == 16:
-                    send_telegram_message(chat_id, "Instance already running!")
-                elif getInstanceInfo("statusCode") == 80:
-                    startInstance()
-                    send_telegram_message(chat_id, "Starting instance")
-                else:
-                    send_telegram_message(chat_id, f"Instance already exists is it is currently: {getInstanceInfo('status')}")
-            else:
-                if keyPairExists() and securityGroupExists():
-                    createInstance()
+            if instance == None:
+                if key_pair_exists() and security_group_exists():
+                    create_instance()
                     send_telegram_message(chat_id, "Successfully created and started instance!")
                 else:
                     send_telegram_message(chat_id, "key pair or security group does not exist creating them now...")
-                    if not keyPairExists():
-                        createKeyPair()
+                    if not key_pair_exists():
+                        create_key_pair()
                         send_telegram_message(chat_id, "Successfully created new key pair")
-                    if not securityGroupExists():
-                        createSecurityGroup()
+                    if not security_group_exists():
+                        create_security_group()
                         send_telegram_message(chat_id, "Successfully created new security group")
                     send_telegram_message(chat_id, "Please run 'startInstance' again")
+            else:
+                if instance.state['Code'] == InstanceState.running:
+                    send_telegram_message(chat_id, "Instance already running!")
+                elif instance.state['Code'] == InstanceState.stopped:
+                    start_instance(instance)
+                    send_telegram_message(chat_id, "Starting instance")
+                else:
+                    send_telegram_message(chat_id, f"Instance already exists is it is currently: {instance.state['Name']}")
         elif message == "createKeyPair":
-            createKeyPair()
+            create_key_pair()
             send_telegram_message(chat_id, "Successfully created new key pair")
         elif message == "createSecurityGroup":
-            if securityGroupExists():
-                send_telegram_message(chat_id, "Security group")
+            if security_group_exists():
+                send_telegram_message(chat_id, "Security group exists")
             else:
-                createSecurityGroup()
+                create_security_group()
                 send_telegram_message(chat_id, "Successfully created new security group")
         elif message == "getInstanceStatus":
-            if instanceExists():
-                send_telegram_message(chat_id, f"The instance is currently: {getInstanceInfo('status')}")
+            if instance != None:
+                send_telegram_message(chat_id, f"The instance is currently: {instance.state['Name']}")
             else:
                 send_telegram_message(chat_id, "No instance exist. Start a new one first")
         elif message == "getInstanceIpAddress":
-            if instanceExists() and getInstanceInfo('statusCode') == 16:
-                send_telegram_message(chat_id, f"Instance Ip Address is: {getInstanceInfo('ipAddress')}")
+            if instance != None and instance.state['Code'] == InstanceState.running:
+                send_telegram_message(chat_id, f"Instance Ip Address is: {instance.public_ip_address}")
             else:
                 send_telegram_message(chat_id, "No instance exist or instance is not running. Start a new/start instance first")
         elif message == "stopInstance":
-            if stopInstance():
-                send_telegram_message(chat_id, "Instance stopping")
-            else:
-                send_telegram_message(chat_id, "Error stopping instance")
+            send_telegram_message(chat_id, "Instance stopping")
         else:
             send_telegram_message(chat_id, f"Command not recognized: '{message}'")
     except Exception as e:
         logger.error(f"Request failed with error: {traceback.format_exc()}")
-    finally:
-        return {"statusCode":200}
 
 def _start_minecraft_server(chat_id: str):
     send_telegram_message(chat_id, "This is where lambda starts up the EC2 instance")
@@ -119,41 +123,25 @@ def send_telegram_message(chat_id: str, message: str):
     res = requests.post(url, data)
     res.raise_for_status()
 
-def get_instance_ids():
+def create_key_pair():
+    if not key_pair_exists():
+        ec2.create_key_pair(KeyName = KEY_NAME)
 
-    all_instances = EC2.describe_instances()
-    
-    instance_ids = []
-    
-    # find instance-id based on instance name
-    # many for loops but should work
-    for reservation in all_instances['Reservations']:
-        for instance in reservation['Instances']:
-            if 'Tags' in instance:
-                for tag in instance['Tags']:
-                    instance_ids.append(instance['InstanceId'])
-                        
-    return instance_ids
-
-def createKeyPair():
-    if not keyPairExists():
-        EC2.create_key_pair(KeyName = KEY_NAME)
-
-def keyPairExists():
-    key_pairs = EC2.describe_key_pairs()['KeyPairs']
+def key_pair_exists():
+    key_pairs = ec2.key_pairs.all()
     for key in key_pairs:
-        if key['KeyName'] == KEY_NAME:
+        if key.key_name == KEY_NAME:
             return True
     return False
 
-def createSecurityGroup():
-    security_group = EC2.create_security_group(
+def create_security_group():
+    security_group = ec2.create_security_group(
         GroupName = SECURITY_GROUP_NAME,
         Description = f"{SECURITY_GROUP_NAME}_group",
-        VpcId = str(getVpc())
+        VpcId = str(get_vpc())
     )
-    EC2.authorize_security_group_ingress(
-        GroupId = security_group['GroupId'],
+    security_group.authorize_ingress(
+        GroupName=security_group.group_name,
             IpPermissions = [
                 {
                     # for ssh
@@ -179,22 +167,22 @@ def createSecurityGroup():
             ]
     )
 
-def securityGroupExists():
-    security_groups = EC2.describe_security_groups()['SecurityGroups']
+def security_group_exists():
+    security_groups = ec2.security_groups.all()
     for group in security_groups:
-        if str(group['GroupName']) == SECURITY_GROUP_NAME:
+        if group.group_name == SECURITY_GROUP_NAME:
             return True
     return False
 
-def getVpc():
-    security_groups = EC2.describe_security_groups()['SecurityGroups']
+def get_vpc():
+    security_groups = ec2.security_groups.all()
     for group in security_groups:
-        if group['GroupName'] == 'default':
-            return group['VpcId']
+        if group.group_name == 'default':
+            return group.vpc_id
 
-def createInstance():
-    instance = EC2_RESOURCE.create_instances(
-        ImageId = 'ami-0c2b8ca1dad447f8a',
+def create_instance():
+    ec2.create_instances(
+        ImageId = 'ami-0c2b8ca1dad447f8a', 
         MinCount = 1,
         MaxCount = 1,
         InstanceType = 't2.micro',
@@ -211,57 +199,40 @@ def createInstance():
         SecurityGroups = [SECURITY_GROUP_NAME]
     )
 
-def startInstance():
-    if instanceExists():
-        EC2.start_instances(
-            InstanceIds=[getInstanceInfo("instanceId")]
-        )
-        return True
-    else:
-        return False
+# to do
+# check if instance start is successful
+def start_instance(instance):
+    instance.start()
 
-def stopInstance():
-    if instanceExists():
-        EC2.stop_instances(
-            InstanceIds=[getInstanceInfo("instanceId")]
-        )
-        return True
-    else:
-        return False
-
-# Checks to see if the minecraft instance is currently running
-# Note: if minecraft instance is stopped it will still return true
-# It will return false only if the mincraft instance is terimated or does not exist
-def instanceExists():
-    all_instances = EC2.describe_instances()
-    for reservation in all_instances['Reservations']:
-        for instance in reservation['Instances']:
-            if instance['KeyName'] == KEY_NAME and instance['State']['Code'] != 48:
-                return True
-    return False
+# to do
+# check if instance stop is successful
+def stop_instance(instance):
+    instance.stop()
 
 # Usage:
 # Minecraft instance must be running first
 # 'status' to get minecraft instance running status (ex. running or stopped) - returns string
 # 'ipAddress' to get minecraft instance's public ip address - returns address as string
 # 'instanceId' to get minecraft's instance id - returns id as string
-def getInstanceInfo(info):
-    if instanceExists():
-        all_instances = EC2.describe_instances()
-        for reservation in all_instances['Reservations']:
-            for instance in reservation['Instances']:
-                if instance['KeyName'] == KEY_NAME and instance['State']['Code'] != 48:
-                    if info == "status":
-                        return str(instance['State']['Name'])
-                    elif info == "statusCode":
-                        return instance['State']['Code']
-                    elif info == "ipAddress":
-                        if instance['State']['Code'] == 16:
-                            return str(instance['PublicIpAddress'])
-                        else:
-                            return "Error. Instance not running"
-                    elif info == "instanceId":
-                        return str(instance['InstanceId'])
+def get_instance_info(info, instance):
+    if info == "status":
+        return str(instance.state['Name'])
+    elif info == "statusCode":
+        return instance.state['Code']
+    elif info == "ipAddress":
+        if instance.state['Code'] == InstanceState.running:
+            return str(instance.public_ip_address)
+        else:
+            return "Error. Instance not running"
+    elif info == "instanceId":
+        return str(instance.instance_id)
+    return None
 
-# def describeInstances():
-    # print (EC2.describe_instances())
+# Finds the minecraft instance and returns it if found
+# Otherwise return none
+def load_instance():
+    all_instances = ec2.instances.all()
+    for instance in all_instances:
+        if instance.key_name == KEY_NAME and instance.state['Code'] != InstanceState.terminated:
+            return instance
+    return None
