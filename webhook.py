@@ -91,7 +91,11 @@ def handler(event, context):
             else:
                 send_telegram_message(chat_id, "No instance exist or instance is not running. Start a new/start instance first")
         elif message == "stopInstance":
-            send_telegram_message(chat_id, "Instance stopping")
+            if instance.state['Code'] == InstanceState.running:
+                stop_instance(instance)
+                send_telegram_message(chat_id, "Instance stopping")
+            else:
+                send_telegram_message(chat_id, f"Instance is currently {instance.state['Code']}")
         else:
             send_telegram_message(chat_id, f"Command not recognized: '{message}'")
     except Exception as e:
