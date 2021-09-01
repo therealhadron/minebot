@@ -1,10 +1,10 @@
 import boto3
-from botocore.exceptions import ClientError
+from botocore.credentials import create_assume_role_refresher
+from botocore.exceptions import ClientError # todo add error handling and loggimg to code
 import logging
 logger = logging.getLogger("webhook")
 logging.basicConfig(level=logging.DEBUG)
-import os, sys
-import json
+import os
 import requests
 import traceback
 from enum import IntEnum
@@ -52,16 +52,20 @@ def handler(event, context):
         elif message == "startInstance":
             if instance == None:
                 if key_pair_exists() and security_group_exists():
-                    create_instance()
-                    send_telegram_message(chat_id, "Successfully created and started instance!")
+                    if create_instance():
+                        send_telegram_message(chat_id, "Successfully created and started instance!")
+                    else:
+                        send_telegram_message(chat_id, "Error creating instance")
                 else:
                     send_telegram_message(chat_id, "key pair or security group does not exist creating them now...")
-                    if not key_pair_exists():
-                        create_key_pair()
+                    if create_key_pair():
                         send_telegram_message(chat_id, "Successfully created new key pair")
-                    if not security_group_exists():
-                        create_security_group()
+                    else:
+                        send_telegram_message(chat_id, "Error creating key pair")
+                    if create_security_group():
                         send_telegram_message(chat_id, "Successfully created new security group")
+                    else:
+                        send_telegram_message(chat_id, "Error creating security group")
                     send_telegram_message(chat_id, "Please run 'startInstance' again")
             else:
                 if instance.state['Code'] == InstanceState.running:
@@ -70,7 +74,7 @@ def handler(event, context):
                     start_instance(instance)
                     send_telegram_message(chat_id, "Starting instance")
                 else:
-                    send_telegram_message(chat_id, f"Instance already exists is it is currently: {instance.state['Name']}")
+                    send_telegram_message(chat_id, f"Instance already exists it is currently: {instance.state['Name']}")
         elif message == "createKeyPair":
             create_key_pair()
             send_telegram_message(chat_id, "Successfully created new key pair")
@@ -91,11 +95,14 @@ def handler(event, context):
             else:
                 send_telegram_message(chat_id, "No instance exist or instance is not running. Start a new/start instance first")
         elif message == "stopInstance":
-            if instance.state['Code'] == InstanceState.running:
-                stop_instance(instance)
-                send_telegram_message(chat_id, "Instance stopping")
+            if instance == None:
+                send_telegram_message(chat_id, "Instance does not exist! Nothing to stop!")
             else:
-                send_telegram_message(chat_id, f"Instance is currently {instance.state['Code']}")
+                if instance.state['Code'] == InstanceState.running:
+                    stop_instance(instance)
+                    send_telegram_message(chat_id, "Instance stopping")
+                else:
+                    send_telegram_message(chat_id, f"Instance is currently {instance.state['Code']}")
         else:
             send_telegram_message(chat_id, f"Command not recognized: '{message}'")
     except Exception as e:
@@ -127,9 +134,15 @@ def send_telegram_message(chat_id: str, message: str):
     res = requests.post(url, data)
     res.raise_for_status()
 
+# return true if key pair creation is successful
+# return false if key pair creation fails
 def create_key_pair():
-    if not key_pair_exists():
+    try:
         ec2.create_key_pair(KeyName = KEY_NAME)
+        return True
+    except:
+        # to do add error logging
+        return False
 
 def key_pair_exists():
     key_pairs = ec2.key_pairs.all()
@@ -138,38 +151,46 @@ def key_pair_exists():
             return True
     return False
 
+# return true if create securtiy group is successful
+# return false if create security group fails
 def create_security_group():
-    security_group = ec2.create_security_group(
-        GroupName = SECURITY_GROUP_NAME,
-        Description = f"{SECURITY_GROUP_NAME}_group",
-        VpcId = str(get_vpc())
-    )
-    security_group.authorize_ingress(
-        GroupName=security_group.group_name,
-            IpPermissions = [
-                {
-                    # for ssh
-                    'IpProtocol': 'tcp',
-                    'FromPort': 22,
-                    'ToPort': 22,
-                    'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
-                },
-                {
-                    # for minecraft server
-                    'IpProtocol': 'tcp',
-                    'FromPort': 25565,
-                    'ToPort': 25565,
-                    'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
-                },
-                {
-                    # for google drive http requests
-                    'IpProtocol': 'tcp',
-                    'FromPort': 80,
-                    'ToPort': 80,
-                    'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
-                }
-            ]
-    )
+    try:
+        security_group = ec2.create_security_group(
+            GroupName = SECURITY_GROUP_NAME,
+            Description = f"{SECURITY_GROUP_NAME}_group",
+            VpcId = str(get_vpc())
+        )
+        security_group.authorize_ingress(
+            GroupName=security_group.group_name,
+                IpPermissions = [
+                    {
+                        # for ssh
+                        'IpProtocol': 'tcp',
+                        'FromPort': 22,
+                        'ToPort': 22,
+                        'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
+                    },
+                    {
+                        # for minecraft server
+                        'IpProtocol': 'tcp',
+                        'FromPort': 25565,
+                        'ToPort': 25565,
+                        'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
+                    },
+                    {
+                        # for google drive http requests
+                        'IpProtocol': 'tcp',
+                        'FromPort': 80,
+                        'ToPort': 80,
+                        'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
+                    }
+                ]
+        )
+        return True
+    except:
+        # to do add error logging
+        return False
+
 
 def security_group_exists():
     security_groups = ec2.security_groups.all()
@@ -184,24 +205,30 @@ def get_vpc():
         if group.group_name == 'default':
             return group.vpc_id
 
+# Return true if creating instance without errors
+# Return false if fails
 def create_instance():
-    ec2.create_instances(
-        ImageId = 'ami-0c2b8ca1dad447f8a', 
-        MinCount = 1,
-        MaxCount = 1,
-        InstanceType = 't2.micro',
-        KeyName = KEY_NAME,
-        BlockDeviceMappings = [
-            {
-                'DeviceName': "/dev/xvda",
-                'Ebs':{
-                    'DeleteOnTermination': True,
-                    'VolumeSize': 8
+    try:
+        ec2.create_instances(
+            ImageId = 'ami-0c2b8ca1dad447f8a', 
+            MinCount = 1,
+            MaxCount = 1,
+            InstanceType = 't2.micro',
+            KeyName = KEY_NAME,
+            BlockDeviceMappings = [
+                {
+                    'DeviceName': "/dev/xvda",
+                    'Ebs':{
+                        'DeleteOnTermination': True,
+                        'VolumeSize': 8
+                    }
                 }
-            }
-        ],
-        SecurityGroups = [SECURITY_GROUP_NAME]
-    )
+            ],
+            SecurityGroups = [SECURITY_GROUP_NAME]
+        )
+        return True
+    except:
+        return False
 
 # to do
 # check if instance start is successful
