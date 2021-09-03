@@ -235,13 +235,9 @@ def create_instance():
                             systemctl enable noip.service\n
                             systemctl start noip.service\n
 
-                            yum -y install curl\n
-                            curl -O https://download.java.net/java/GA/jdk16.0.2/d4a915d82b4c4fbb9bde534da945d746/7/GPL/openjdk-16.0.2_linux-x64_bin.tar.gz\n
-                            tar xvf openjdk-16.0.2_linux-x64_bin.tar.gz\n
-                            mv jdk-16.0.2 /opt/\n
-                            echo "export JAVA_HOME=/opt/jdk-16.0.2" >> ~/.bashrc\n
-                            echo "export PATH=$PATH:$JAVA_HOME/bin" >> ~/.bashrc\n
-                            source ~/.bashrc
+                            yum install -y wget\n
+                            wget --no-check-certificate -c --header "Cookie: oraclelicense=accept-securebackup-cookie" https://download.oracle.com/otn-pub/java/jdk/16.0.2%2B7/d4a915d82b4c4fbb9bde534da945d746/jdk-16.0.2_linux-x64_bin.rpm\n
+                            rpm -ivh jdk-16.0.2_linux-x64_bin.rpm
                             '''
         )
         return True

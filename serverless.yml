@@ -65,7 +65,7 @@ plugins:
   - serverless-offline
   - serverless-dotenv-plugin
   - serverless-python-requirements
-
+  
 custom:
   pythonRequirements:
     slim: true
