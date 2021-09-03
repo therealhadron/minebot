@@ -23,6 +23,8 @@ KEY_NAME = 'minebot_server_key'
 SECURITY_GROUP_NAME = 'minebot_security'
 
 TOKEN = os.environ['TELEGRAM_TOKEN']
+NO_IP_USER = os.environ['NO_IP_USER']
+NO_IP_PASSWORD = os.environ['NO_IP_PASSWORD']
 BASE_URL = f"https://api.telegram.org/bot{TOKEN}"
 
 class InstanceState(IntEnum):
@@ -224,7 +226,23 @@ def create_instance():
                     }
                 }
             ],
-            SecurityGroups = [SECURITY_GROUP_NAME]
+            SecurityGroups = [SECURITY_GROUP_NAME],
+            UserData = f'''#! /bin/bash\n
+                            yum -y update\n
+                            yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm\n
+                            yum install -y noip\n
+                            noip2 -C -U 30 -u {NO_IP_USER} -p {NO_IP_PASSWORD}\n
+                            systemctl enable noip.service\n
+                            systemctl start noip.service\n
+
+                            yum -y install curl\n
+                            curl -O https://download.java.net/java/GA/jdk16.0.2/d4a915d82b4c4fbb9bde534da945d746/7/GPL/openjdk-16.0.2_linux-x64_bin.tar.gz\n
+                            tar xvf openjdk-16.0.2_linux-x64_bin.tar.gz\n
+                            mv jdk-16.0.2 /opt/\n
+                            echo "export JAVA_HOME=/opt/jdk-16.0.2" >> ~/.bashrc\n
+                            echo "export PATH=$PATH:$JAVA_HOME/bin" >> ~/.bashrc\n
+                            source ~/.bashrc
+                            '''
         )
         return True
     except:

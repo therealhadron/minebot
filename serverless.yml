@@ -8,6 +8,8 @@ provider:
   profile: minebot
   environment:
     TELEGRAM_TOKEN: ${env:TELEGRAM_TOKEN}
+    NO_IP_USER: ${env:NO_IP_USER}
+    NO_IP_PASSWORD: ${env:NO_IP_PASSWORD}
   iam:
     role:
       statements:
