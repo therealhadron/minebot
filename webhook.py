@@ -23,6 +23,8 @@ KEY_NAME = 'minebot_server_key'
 SECURITY_GROUP_NAME = 'minebot_security'
 
 TOKEN = os.environ['TELEGRAM_TOKEN']
+NO_IP_USER = os.environ['NO_IP_USER']
+NO_IP_PASSWORD = os.environ['NO_IP_PASSWORD']
 BASE_URL = f"https://api.telegram.org/bot{TOKEN}"
 
 class InstanceState(IntEnum):
@@ -178,6 +180,13 @@ def create_security_group():
                         'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
                     },
                     {
+                        # for rcon
+                        'IpProtocol': 'tcp',
+                        'FromPort': 25575,
+                        'ToPort': 25575,
+                        'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
+                    },
+                    {
                         # for google drive http requests
                         'IpProtocol': 'tcp',
                         'FromPort': 80,
@@ -224,7 +233,40 @@ def create_instance():
                     }
                 }
             ],
-            SecurityGroups = [SECURITY_GROUP_NAME]
+            SecurityGroups = [SECURITY_GROUP_NAME],
+            UserData = f'''#! /bin/bash\n
+
+                            echo "Updating OS"
+                            yum -y update\n
+
+                            echo "Installing noip client"
+                            yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm\n
+                            yum install -y noip\n
+                            noip2 -C -U 30 -u {NO_IP_USER} -p {NO_IP_PASSWORD}\n
+                            systemctl enable noip.service\n
+                            systemctl start noip.service\n
+
+                            echo "Installing Java 16"
+                            yum install -y wget\n
+                            wget --no-check-certificate -c --header "Cookie: oraclelicense=accept-securebackup-cookie" https://download.oracle.com/otn-pub/java/jdk/16.0.2%2B7/d4a915d82b4c4fbb9bde534da945d746/jdk-16.0.2_linux-x64_bin.rpm\n
+                            rpm -ivh jdk-16.0.2_linux-x64_bin.rpm
+
+                            echo "Downloading and creating scripts from GitHub..."
+                            mkdir /home/ec2-user/code/
+                            mkdir /home/ec2-user/code/scripts/
+                            mkdir /home/ec2-user/code/core/
+
+                            curl -o /home/ec2-user/code/Makefile https://raw.githubusercontent.com/Cypheruim/minebot/main/Makefile
+
+                            curl -o /home/ec2-user/code/scripts/fetch_server.sh https://raw.githubusercontent.com/Cypheruim/minebot/main/scripts/fetch_server.sh
+                            curl -o /home/ec2-user/code/scripts/init_server_settings.sh https://raw.githubusercontent.com/Cypheruim/minebot/main/scripts/init_server_settings.sh
+                            curl -o /home/ec2-user/code/scripts/server_downloader.py https://raw.githubusercontent.com/Cypheruim/minebot/main/scripts/server_downloader.py
+
+                            curl -o /home/ec2-user/code/core/cron.py https://raw.githubusercontent.com/Cypheruim/minebot/main/core/cron.py
+                            curl -o /home/ec2-user/code/core/rcon.py https://raw.githubusercontent.com/Cypheruim/minebot/main/core/rcon.py
+                            curl -o /home/ec2-user/code/core/status.py https://raw.githubusercontent.com/Cypheruim/minebot/main/core/status.py
+
+                            '''
         )
         return True
     except:
