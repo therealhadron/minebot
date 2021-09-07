@@ -18,6 +18,6 @@ def get_latest_version_url():
         return server_jar_url
 
     except Exception as e:
-        print(f"Failed to get latest minecraft server jar file. Error: {e}")
+        print(e)
     
     return ""
