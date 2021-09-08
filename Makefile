@@ -7,9 +7,11 @@ MAKEFLAGS += --silent
 # - It's also recommended that you run this in a python venv to reduce pip clutter
 
 install:
-	pip install -r requirements.txt
-	npm install
+	pip3 install -r requirements.txt
 	scripts/fetch_server.sh
+
+local: install
+	npm install
 
 run: install
 	cd core && python3 cron.py &
@@ -20,4 +22,4 @@ clean:
 	rm -f server.jar
 	rm -rf node_modules
 
-.PHONY: install run clean
+.PHONY: install run clean local
