@@ -236,10 +236,10 @@ def create_instance():
             SecurityGroups = [SECURITY_GROUP_NAME],
             UserData = f'''#! /bin/bash\n
 
-                            echo "Updating OS"
+                            echo "Updating OS"\n
                             yum -y update\n
 
-                            echo "Installing noip client"
+                            echo "Installing noip client"\n
                             yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm\n
                             yum install -y noip\n
                             yum install -y git\n
@@ -247,12 +247,12 @@ def create_instance():
                             systemctl enable noip.service\n
                             systemctl start noip.service\n
 
-                            echo "Installing Java 16"
+                            echo "Installing Java 16"\n
                             yum install -y wget\n
                             wget --no-check-certificate -c --header "Cookie: oraclelicense=accept-securebackup-cookie" https://download.oracle.com/otn-pub/java/jdk/16.0.2%2B7/d4a915d82b4c4fbb9bde534da945d746/jdk-16.0.2_linux-x64_bin.rpm\n
-                            rpm -ivh jdk-16.0.2_linux-x64_bin.rpm
+                            rpm -ivh jdk-16.0.2_linux-x64_bin.rpm\n
 
-                            echo "Downloading and creating scripts from GitHub..."
+                            echo "Downloading and creating scripts from GitHub..."\n
 
                             git clone https://github.com/Cypheruim/minebot.git
                             '''
