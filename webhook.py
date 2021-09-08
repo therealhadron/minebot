@@ -242,7 +242,6 @@ def create_instance():
                             echo "Installing noip client"\n
                             yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm\n
                             yum install -y noip\n
-                            yum install -y git\n
                             noip2 -C -U 30 -u {NO_IP_USER} -p {NO_IP_PASSWORD}\n
                             systemctl enable noip.service\n
                             systemctl start noip.service\n
@@ -253,7 +252,8 @@ def create_instance():
                             rpm -ivh jdk-16.0.2_linux-x64_bin.rpm\n
 
                             echo "Downloading and creating scripts from GitHub..."\n
-
+                            
+                            yum install -y git\n
                             git clone https://github.com/Cypheruim/minebot.git
                             '''
         )
