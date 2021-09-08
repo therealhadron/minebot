@@ -242,6 +242,7 @@ def create_instance():
                             echo "Installing noip client"
                             yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm\n
                             yum install -y noip\n
+                            yum install -y git\n
                             noip2 -C -U 30 -u {NO_IP_USER} -p {NO_IP_PASSWORD}\n
                             systemctl enable noip.service\n
                             systemctl start noip.service\n
@@ -252,20 +253,8 @@ def create_instance():
                             rpm -ivh jdk-16.0.2_linux-x64_bin.rpm
 
                             echo "Downloading and creating scripts from GitHub..."
-                            mkdir /home/ec2-user/code/
-                            mkdir /home/ec2-user/code/scripts/
-                            mkdir /home/ec2-user/code/core/
 
-                            curl -o /home/ec2-user/code/Makefile https://raw.githubusercontent.com/Cypheruim/minebot/main/Makefile
-
-                            curl -o /home/ec2-user/code/scripts/fetch_server.sh https://raw.githubusercontent.com/Cypheruim/minebot/main/scripts/fetch_server.sh
-                            curl -o /home/ec2-user/code/scripts/init_server_settings.sh https://raw.githubusercontent.com/Cypheruim/minebot/main/scripts/init_server_settings.sh
-                            curl -o /home/ec2-user/code/scripts/server_downloader.py https://raw.githubusercontent.com/Cypheruim/minebot/main/scripts/server_downloader.py
-
-                            curl -o /home/ec2-user/code/core/cron.py https://raw.githubusercontent.com/Cypheruim/minebot/main/core/cron.py
-                            curl -o /home/ec2-user/code/core/rcon.py https://raw.githubusercontent.com/Cypheruim/minebot/main/core/rcon.py
-                            curl -o /home/ec2-user/code/core/status.py https://raw.githubusercontent.com/Cypheruim/minebot/main/core/status.py
-
+                            git clone https://github.com/Cypheruim/minebot.git
                             '''
         )
         return True
