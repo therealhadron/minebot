@@ -190,7 +190,7 @@ def create_security_group():
                         # for google drive http requests
                         'IpProtocol': 'tcp',
                         'FromPort': 80,
-                        'ToPort': 80,
+                        'ToPort': 8080,
                         'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
                     }
                 ]
@@ -254,9 +254,15 @@ def create_instance():
                             echo "Downloading and creating scripts from GitHub..."\n
                             
                             yum install -y git\n
-                            git clone https://github.com/Cypheruim/minebot.git\n
-
-                            cd /minebot && make run
+                            git clone -b test https://github.com/Cypheruim/minebot.git\n
+                            echo "Before cd /minebot"\n
+                            echo pwd is $(pwd)\n
+                            /minebot/bootstrap.sh\n
+                            cd /minebot\n
+                            ./bootstrap.sh\n
+                            echo "Before make run"\n
+                            make -f Makefile run\n
+                            echo "After make run"\n
                             '''
         )
         return True
