@@ -252,11 +252,14 @@ def create_instance():
                             rpm -ivh jdk-16.0.2_linux-x64_bin.rpm\n
 
                             echo "Downloading and creating scripts from GitHub..."\n
-                            
+
                             yum install -y git\n
                             git clone https://github.com/Cypheruim/minebot.git\n
 
-                            cd /minebot && make run
+                            cp /minebot/minebot-startup.service /etc/systemd/system/\n
+                            chmod +x /minebot/start.sh\n
+                            systemctl enable minebot-startup.service\n
+                            systemctl start minebot-startup.service\n
                             '''
         )
         return True
