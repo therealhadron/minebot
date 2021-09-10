@@ -254,7 +254,9 @@ def create_instance():
                             echo "Downloading and creating scripts from GitHub..."\n
                             
                             yum install -y git\n
-                            git clone https://github.com/Cypheruim/minebot.git
+                            git clone https://github.com/Cypheruim/minebot.git\n
+
+                            cd /minebot && make run
                             '''
         )
         return True
