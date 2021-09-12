@@ -1,5 +1,6 @@
 import time
 import traceback
+import signal
 from mcstatus import MinecraftServer
 from rcon import save_and_stop
 
@@ -21,13 +22,18 @@ def stop_server():
     except Exception as e:
         logger.warning(f"stop_server() failed, probably because the server is already stopped. There shouldn't be any fatal side effects. Error: {traceback.format_exc()}")
 
-def main():
-    logger.info("Starting server checker cron...")
-    num_checks = 0
-    logger.info(f"Waiting {STARTUP_WAIT_SECONDS} seconds to let server start up...")
-    time.sleep(STARTUP_WAIT_SECONDS)
+def handle_kill_signal(sig_num, frame):
+    logger.warning(f"Received stop signal: {sig_num} ({signal.Signals(sig_num).name})")
+    raise SystemExit(0)
 
+def main():
     try:
+        logger.info("Starting server checker cron...")
+        signal.signal(signal.SIGINT, handle_kill_signal)
+        signal.signal(signal.SIGTERM, handle_kill_signal)
+        num_checks = 0
+        logger.info(f"Waiting {STARTUP_WAIT_SECONDS} seconds to let server start up...")
+        time.sleep(STARTUP_WAIT_SECONDS)
         logger.info(f"Checker is now running...")
         server = MinecraftServer(SERVER_HOST, SERVER_PORT)
         while True:
@@ -47,7 +53,8 @@ def main():
                 logger.warning("Empty server time exceeded, stopping server...")
                 stop_server()
                 break
-
+    except SystemExit as e:
+        logger.warning(f"Received SystemExit trap, stopping...")
     except Exception as e:
         logger.error(f"Error occurred while retriving status, stopping cron. Error: {e}")
         stop_server()
