@@ -254,7 +254,7 @@ def create_instance():
                             echo "Downloading and creating scripts from GitHub..."\n
 
                             yum install -y git\n
-                            git clone https://github.com/Cypheruim/minebot.git\n
+                            git clone -b launch-scipt-improvement https://github.com/Cypheruim/minebot.git\n
 
                             cp /minebot/minebot-startup.service /etc/systemd/system/\n
                             chmod +x /minebot/start.sh\n
