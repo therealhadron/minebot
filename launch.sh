@@ -34,4 +34,4 @@ python3 core/cron.py &
 cron=$!
 
 # Start MC server
-scripts/init_server_settings.sh && cd server && java -Xmx512M -Xms512M -jar ../server.jar nogui
+scripts/init_server_settings.sh && cd server && java -Xmx128M -Xms512M -jar ../server.jar nogui
