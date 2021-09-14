@@ -23,7 +23,7 @@ def stop_server():
         logger.warning(f"stop_server() failed, probably because the server is already stopped. There shouldn't be any fatal side effects. Error: {traceback.format_exc()}")
 
 def handle_kill_signal(sig_num, frame):
-    logger.warning(f"Received stop signal: {sig_num} ({signal.Signals(sig_num).name})")
+    logger.info(f"Received stop signal: {sig_num} ({signal.Signals(sig_num).name})")
     raise SystemExit(0)
 
 def main():
@@ -34,7 +34,7 @@ def main():
         num_checks = 0
         logger.info(f"Waiting {STARTUP_WAIT_SECONDS} seconds to let server start up...")
         time.sleep(STARTUP_WAIT_SECONDS)
-        logger.info(f"Checker is now running...")
+        logger.info("Checker is now running...")
         server = MinecraftServer(SERVER_HOST, SERVER_PORT)
         while True:
             time.sleep(CHECK_INTERVAL_SECONDS)
@@ -50,11 +50,11 @@ def main():
                 logger.warning(f"Empty server detected, auto-shutdown sequence initiated ({num_checks}/{CHECKS_TO_STOP})")
                 
             if num_checks >= CHECKS_TO_STOP:
-                logger.warning("Empty server time exceeded, stopping server...")
+                logger.info("Empty server time exceeded, stopping server...")
                 stop_server()
                 break
     except SystemExit as e:
-        logger.warning(f"Received SystemExit trap, stopping...")
+        logger.info("Received SystemExit trap, stopping...")
     except Exception as e:
         logger.error(f"Error occurred while retriving status, stopping cron. Error: {e}")
         stop_server()
