@@ -15,8 +15,7 @@ local: install
 	./launch.sh
 
 run: install
-	./launch.sh
-	./shutdown.sh
+	./launch.sh --shutdown
 
 clean:
 	rm -rf server
