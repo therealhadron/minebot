@@ -15,5 +15,3 @@ def get_latest_version_url():
     except Exception as e:
         print (e)
     return ""
-
-get_latest_version_url()
