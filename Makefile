@@ -12,10 +12,10 @@ install:
 
 local: install
 	npm install
+	./launch.sh
 
 run: install
-	cd core && python3 cron.py &
-	scripts/init_server_settings.sh && cd server && java -Xmx512M -Xms512M -jar ../server.jar nogui
+	./launch.sh --shutdown
 
 clean:
 	rm -rf server

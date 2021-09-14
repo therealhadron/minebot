@@ -1,9 +1,11 @@
 import boto3
 from botocore.credentials import create_assume_role_refresher
 from botocore.exceptions import ClientError # todo add error handling and loggimg to code
+
 import logging
 logger = logging.getLogger("webhook")
 logging.basicConfig(level=logging.DEBUG)
+
 import os
 import requests
 import traceback
@@ -199,7 +201,6 @@ def create_security_group():
     except:
         # to do add error logging
         return False
-
 
 def security_group_exists():
     security_groups = ec2.security_groups.all()
