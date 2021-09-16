@@ -53,7 +53,17 @@ def handler(event, context):
             _start_minecraft_server(chat_id)
         elif message.startswith("/stop_server"):
             _send_minecraft_command(chat_id, "stop")
-        elif message == "startInstance":
+        elif message == "/start":
+            send_telegram_message(chat_id, "Welcome to minebot!\n\nUse /help to see what I can do!")
+        elif message == "/help":
+            send_telegram_message(chat_id,
+            '''/help - Brings up this help menu
+        /startInstance - Starts/creates the minecraft ec2 instance and turns on the minecraft server
+        /stopInstance - Stops the minecraft ec2 instance and turns off the minecraft server
+        /getInstanceStatus - Gets the current status of the instance (pending, stopping, stopped, etc.)
+        /getInstanceIP - Gets the public ip address of the instance in case you are having trouble connecting to No-Ip
+            ''')
+        elif message == "/startInstance":
             if instance == None:
                 if key_pair_exists() and security_group_exists():
                     if create_instance():
@@ -79,26 +89,26 @@ def handler(event, context):
                     send_telegram_message(chat_id, "Starting instance")
                 else:
                     send_telegram_message(chat_id, f"Instance already exists it is currently: {instance.state['Name']}")
-        elif message == "createKeyPair":
+        elif message == "/createKeyPair":
             create_key_pair()
             send_telegram_message(chat_id, "Successfully created new key pair")
-        elif message == "createSecurityGroup":
+        elif message == "/createSecurityGroup":
             if security_group_exists():
                 send_telegram_message(chat_id, "Security group exists")
             else:
                 create_security_group()
                 send_telegram_message(chat_id, "Successfully created new security group")
-        elif message == "getInstanceStatus":
+        elif message == "/getInstanceStatus":
             if instance != None:
                 send_telegram_message(chat_id, f"The instance is currently: {instance.state['Name']}")
             else:
                 send_telegram_message(chat_id, "No instance exist. Start a new one first")
-        elif message == "getInstanceIpAddress":
+        elif message == "/getInstanceIP":
             if instance != None and instance.state['Code'] == InstanceState.running:
                 send_telegram_message(chat_id, f"Instance Ip Address is: {instance.public_ip_address}")
             else:
                 send_telegram_message(chat_id, "No instance exist or instance is not running. Start a new/start instance first")
-        elif message == "stopInstance":
+        elif message == "/stopInstance":
             if instance == None:
                 send_telegram_message(chat_id, "Instance does not exist! Nothing to stop!")
             else:
