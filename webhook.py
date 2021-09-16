@@ -182,17 +182,10 @@ def create_security_group():
                         'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
                     },
                     {
-                        # for rcon
-                        'IpProtocol': 'tcp',
-                        'FromPort': 25575,
-                        'ToPort': 25575,
-                        'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
-                    },
-                    {
-                        # for google drive http requests
+                        # For RCON
                         'IpProtocol': 'tcp',
                         'FromPort': 80,
-                        'ToPort': 80,
+                        'ToPort': 25575,
                         'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
                     }
                 ]
@@ -255,7 +248,7 @@ def create_instance():
                             echo "Downloading and creating scripts from GitHub..."\n
 
                             yum install -y git\n
-                            git clone https://github.com/Cypheruim/minebot.git\n
+                            git clone -b rcon-fix https://github.com/Cypheruim/minebot.git\n
 
                             cp /minebot/minebot-startup.service /etc/systemd/system/\n
                             chmod +x /minebot/start.sh\n
