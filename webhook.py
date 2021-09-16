@@ -61,7 +61,7 @@ def handler(event, context):
         /startInstance - Starts/creates the minecraft ec2 instance and turns on the minecraft server
         /stopInstance - Stops the minecraft ec2 instance and turns off the minecraft server
         /getInstanceStatus - Gets the current status of the instance (pending, stopping, stopped, etc.)
-        /getInstanceIpAddress - Gets the public ip address of the instance in case you are having trouble connecting to No-Ip
+        /getInstanceIP - Gets the public ip address of the instance in case you are having trouble connecting to No-Ip
             ''')
         elif message == "/startInstance":
             if instance == None:
@@ -103,7 +103,7 @@ def handler(event, context):
                 send_telegram_message(chat_id, f"The instance is currently: {instance.state['Name']}")
             else:
                 send_telegram_message(chat_id, "No instance exist. Start a new one first")
-        elif message == "/getInstanceIpAddress":
+        elif message == "/getInstanceIP":
             if instance != None and instance.state['Code'] == InstanceState.running:
                 send_telegram_message(chat_id, f"Instance Ip Address is: {instance.public_ip_address}")
             else:

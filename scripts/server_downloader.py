@@ -1,3 +1,8 @@
+import traceback
+import logging
+logger = logging.getLogger("server_downloader")
+logging.basicConfig(level=logging.DEBUG)
+
 def get_latest_version_url():
     try:
         server_project = "paper"
@@ -7,6 +12,6 @@ def get_latest_version_url():
 /builds/{server_build}/downloads/{server_project}-{server_version}-{server_build}.jar"
 
         return base_url
-    except Exception as e:
-        print (e)
+    except Exception:
+        logger.error(f"get_latest_version_url failed with error: {traceback.format_exc()}")
     return ""
