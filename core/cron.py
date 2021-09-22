@@ -2,7 +2,7 @@ import time
 import traceback
 import signal
 from mcstatus import MinecraftServer
-from rcon import save_and_stop
+from rcon import RCONClient
 
 import logging
 logger = logging.getLogger("cron")
@@ -16,9 +16,12 @@ CHECK_INTERVAL_SECONDS = 5 * SECONDS_PER_MINUTE
 SERVER_HOST = "localhost"
 SERVER_PORT = 25565
 
-def stop_server():
+# TODO: read from server.properties file instead of hard-coding it
+RCON_SECRET = "69420"
+
+def stop_server(client: RCONClient):
     try:
-        save_and_stop()
+        client.save_and_stop()
     except Exception as e:
         logger.warning(f"stop_server() failed, probably because the server is already stopped. There shouldn't be any fatal side effects. Error: {traceback.format_exc()}")
 
@@ -35,6 +38,7 @@ def main():
         logger.info(f"Waiting {STARTUP_WAIT_SECONDS} seconds to let server start up...")
         time.sleep(STARTUP_WAIT_SECONDS)
         logger.info("Checker is now running...")
+        client = RCONClient(secret=RCON_SECRET)
         server = MinecraftServer(SERVER_HOST, SERVER_PORT)
         while True:
             time.sleep(CHECK_INTERVAL_SECONDS)
@@ -51,7 +55,7 @@ def main():
                 
             if num_checks >= CHECKS_TO_STOP:
                 logger.info("Empty server time exceeded, stopping server...")
-                stop_server()
+                stop_server(client)
                 break
     except SystemExit as e:
         logger.info("Received SystemExit trap, stopping...")

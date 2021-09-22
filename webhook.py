@@ -11,7 +11,7 @@ import requests
 import traceback
 from enum import IntEnum
 
-from core.rcon import send_command
+from core.rcon import RCONClient
 
 try:
     TOKEN = os.environ['TELEGRAM_TOKEN']
@@ -27,14 +27,16 @@ SECURITY_GROUP_NAME = 'minebot_security'
 TOKEN = os.environ['TELEGRAM_TOKEN']
 NO_IP_USER = os.environ['NO_IP_USER']
 NO_IP_PASSWORD = os.environ['NO_IP_PASSWORD']
-BASE_URL = f"https://api.telegram.org/bot{TOKEN}"
-
+MC_SERVER_URL = os.environ["MC_SERVER_URL"]
+MC_RCON_SECRET = os.environ["MC_RCON_SECRET"]
+BOT_URL = f"https://api.telegram.org/bot{TOKEN}"
 def get_help_msg():
     return '''/help - Brings up this help menu
 /startinstance - Starts/creates the minecraft ec2 instance and turns on the minecraft server
 /stopinstance - Stops the minecraft ec2 instance and turns off the minecraft server
 /getinstancestatus - Gets the current status of the instance (pending, stopping, stopped, etc.)
-/getinstanceip - Gets the public ip address of the instance in case you are having trouble connecting to No-Ip'''
+/getinstanceip - Gets the public ip address of the instance in case you are having trouble connecting to No-Ip
+/cmd - Sends a Minecraft command to the server'''
 
 class InstanceState(IntEnum):
     pending = 0
@@ -131,16 +133,16 @@ def _send_minecraft_command(chat_id: str, cmd: str):
         send_telegram_message(chat_id, "Cannot send empty command")
         return
     try:
+        client = RCONClient(MC_SERVER_URL, MC_RCON_SECRET)
         cmd = cmd.strip()
-        response = send_command(cmd) or "<No Response>"
+        response = client.send_command(cmd) or "<No Response>"
         send_telegram_message(chat_id, f"Server response: '{response}'")
     except Exception as e:
         logger.error(f"Failed to send command to Minecraft. Got error: {traceback.format_exc()}")
         send_telegram_message(chat_id, "Failed to send command, is the server on?")
-    return {"statusCode":200}
 
 def send_telegram_message(chat_id: str, message: str):
-    url = BASE_URL + "/sendMessage"
+    url = BOT_URL + "/sendMessage"
     data = {
         "chat_id": chat_id,
         "text": message
