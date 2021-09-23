@@ -10,14 +10,7 @@ import os
 import requests
 import traceback
 from enum import IntEnum
-
 from core.rcon import RCONClient
-
-try:
-    TOKEN = os.environ['TELEGRAM_TOKEN']
-except:
-    logger.error(f"Failed to get telegram token from env, is it set? Error: {traceback.format_exc()}")
-    TOKEN = ""
 
 ec2 = boto3.resource('ec2')
 
@@ -30,6 +23,7 @@ NO_IP_PASSWORD = os.environ['NO_IP_PASSWORD']
 MC_SERVER_URL = os.environ["MC_SERVER_URL"]
 MC_RCON_SECRET = os.environ["MC_RCON_SECRET"]
 BOT_URL = f"https://api.telegram.org/bot{TOKEN}"
+
 def get_help_msg():
     return '''/help - Brings up this help menu
 /startinstance - Starts/creates the minecraft ec2 instance and turns on the minecraft server
@@ -269,6 +263,9 @@ def create_instance():
 
                             yum install -y git\n
                             git clone https://github.com/Cypheruim/minebot.git\n
+
+                            echo "Exporting RCON secret '{MC_RCON_SECRET}' to env"\n
+                            export MC_RCON_SECRET={MC_RCON_SECRET}\n
 
                             cp /minebot/minebot-startup.service /etc/systemd/system/\n
                             chmod +x /minebot/start.sh\n

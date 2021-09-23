@@ -1,6 +1,7 @@
 import time
 import traceback
 import signal
+import os
 from mcstatus import MinecraftServer
 from rcon import RCONClient
 
@@ -16,8 +17,7 @@ CHECK_INTERVAL_SECONDS = 5 * SECONDS_PER_MINUTE
 SERVER_HOST = "localhost"
 SERVER_PORT = 25565
 
-# TODO: read from server.properties file instead of hard-coding it
-RCON_SECRET = "69420"
+RCON_SECRET = os.environ["MC_RCON_SECRET"]
 
 def stop_server(client: RCONClient):
     try:

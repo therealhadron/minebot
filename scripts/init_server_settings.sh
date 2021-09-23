@@ -13,4 +13,6 @@ fi
 if [ ! -f server/$PROPERTIES_FILE ]; then
     echo "Creating a RCON-enabled server.properties file..."
     cp templates/${PROPERTIES_FILE} server
+    echo "Setting the RCON secret..."
+    python3 scripts/set_server_properties.py server/$PROPERTIES_FILE
 fi
