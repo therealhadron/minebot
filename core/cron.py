@@ -7,7 +7,7 @@ from rcon import RCONClient
 
 import logging
 logger = logging.getLogger("cron")
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG, filename="log.txt")
 
 SECONDS_PER_MINUTE = 60
 CHECKS_TO_STOP = 2
@@ -16,8 +16,6 @@ CHECK_INTERVAL_SECONDS = 5 * SECONDS_PER_MINUTE
 
 SERVER_HOST = "localhost"
 SERVER_PORT = 25565
-
-RCON_SECRET = os.environ["MC_RCON_SECRET"]
 
 def stop_server(client: RCONClient):
     try:
@@ -38,6 +36,7 @@ def main():
         logger.info(f"Waiting {STARTUP_WAIT_SECONDS} seconds to let server start up...")
         time.sleep(STARTUP_WAIT_SECONDS)
         logger.info("Checker is now running...")
+        RCON_SECRET = os.environ["MC_RCON_SECRET"]
         client = RCONClient(secret=RCON_SECRET)
         server = MinecraftServer(SERVER_HOST, SERVER_PORT)
         while True:
@@ -57,10 +56,10 @@ def main():
                 logger.info("Empty server time exceeded, stopping server...")
                 stop_server(client)
                 break
-    except SystemExit as e:
+    except SystemExit:
         logger.info("Received SystemExit trap, stopping...")
-    except Exception as e:
-        logger.error(f"Error occurred while retriving status, stopping cron. Error: {e}")
+    except Exception:
+        logger.error(f"Error occurred while retriving status, stopping cron. Error: {traceback.format_exc()}")
         stop_server()
     finally:
         logger.info("Server stopped, exiting cron")
