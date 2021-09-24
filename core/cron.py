@@ -27,6 +27,14 @@ def handle_kill_signal(sig_num, frame):
     logger.info(f"Received stop signal: {sig_num} ({signal.Signals(sig_num).name})")
     raise SystemExit(0)
 
+def get_rcon_secret():
+    secret = os.environ.get("MC_RCON_SECRET")
+    if secret != None:
+        return secret
+    
+    with open("rcon_secret.txt", "r") as f:
+        return f.read()
+
 def main():
     try:
         logger.info("Starting server checker cron...")
@@ -36,7 +44,7 @@ def main():
         logger.info(f"Waiting {STARTUP_WAIT_SECONDS} seconds to let server start up...")
         time.sleep(STARTUP_WAIT_SECONDS)
         logger.info("Checker is now running...")
-        RCON_SECRET = os.environ["MC_RCON_SECRET"]
+        RCON_SECRET = get_rcon_secret()
         client = RCONClient(secret=RCON_SECRET)
         server = MinecraftServer(SERVER_HOST, SERVER_PORT)
         while True:

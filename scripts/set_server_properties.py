@@ -5,8 +5,16 @@ logging.basicConfig(level=logging.DEBUG, filename="log.txt")
 
 from properties_parser import PropertiesParser
 
+def get_rcon_secret():
+    secret = os.environ.get("MC_RCON_SECRET")
+    if secret != None:
+        return secret
+    
+    with open("rcon_secret.txt", "r") as f:
+        return f.read()
+
 def run(properties_path: str):
-    RCON_SECRET = os.environ["MC_RCON_SECRET"]
+    RCON_SECRET = get_rcon_secret()
     with PropertiesParser(properties_path) as props:
         props.set("enable-rcon", "true")
         props.set("rcon.password", RCON_SECRET)
