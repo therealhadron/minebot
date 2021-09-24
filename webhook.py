@@ -265,7 +265,7 @@ def create_instance():
                             git clone https://github.com/Cypheruim/minebot.git\n
 
                             echo "Exporting RCON secret '{MC_RCON_SECRET}' to env"\n
-                            export MC_RCON_SECRET={MC_RCON_SECRET}\n
+                            echo "export MC_RCON_SECRET={MC_RCON_SECRET}" >> /home/ec2-user/.bashrc\n
 
                             cp /minebot/minebot-startup.service /etc/systemd/system/\n
                             chmod +x /minebot/start.sh\n
