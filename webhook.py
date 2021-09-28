@@ -227,10 +227,11 @@ def get_vpc():
 def create_instance():
     try:
         ec2.create_instances(
-            ImageId = 'ami-0c2b8ca1dad447f8a', 
+            # ImageId = 'ami-0c2b8ca1dad447f8a',
+            ImageId = 'ami-029c64b3c205e6cce',
             MinCount = 1,
             MaxCount = 1,
-            InstanceType = 't2.micro',
+            InstanceType = 't4g.small',
             KeyName = KEY_NAME,
             BlockDeviceMappings = [
                 {
@@ -262,7 +263,7 @@ def create_instance():
                             echo "Downloading and creating scripts from GitHub..."\n
 
                             yum install -y git\n
-                            git clone https://github.com/Cypheruim/minebot.git\n
+                            git clone -b testing https://github.com/Cypheruim/minebot.git\n
 
                             echo "Exporting RCON secret '{MC_RCON_SECRET}' to env"\n
                             echo "export MC_RCON_SECRET={MC_RCON_SECRET}" >> ~/.bashrc\n

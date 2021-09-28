@@ -15,7 +15,7 @@ shutdown_instance() {
     # Wait for a few seconds before shutting down in case clean up scripts are still running
     # shutdown command cannot specify lengths under a minute so use sleep instead
     sleep 10
-    shutdown now
+    # shutdown now
 }
 
 # Kills any child processes and shut down the system if the shutdown flag is specified
@@ -34,4 +34,4 @@ python3 core/cron.py &
 cron=$!
 
 # Start MC server
-scripts/init_server_settings.sh && cd server && java -Xms128M -Xmx512M -jar ../server.jar nogui
+scripts/init_server_settings.sh && cd server && java -Xms512M -Xmx1024M -jar ../server.jar nogui
