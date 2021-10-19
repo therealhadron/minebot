@@ -3,8 +3,10 @@ from botocore.credentials import create_assume_role_refresher
 from botocore.exceptions import ClientError # todo add error handling and loggimg to code
 
 import logging
-logger = logging.getLogger("webhook")
+
 logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("webhook")
+logger.setLevel(logging.INFO)
 
 import os
 import requests
@@ -43,10 +45,13 @@ class InstanceState(IntEnum):
 def handler(event, context):
     try:
         data = event["body"]
+        logger.info(f"Received data: {str(data)}")
         message = str(data["message"]["text"])
         chat_id = data["message"]["chat"]["id"]
 
-        logger.info(f"Received message: {message}")
+        # TODO: Remove this, we're temporarily disabling the bot
+        return
+        
         command_prefix = "/cmd"
         instance = load_instance()
 
